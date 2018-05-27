@@ -18,7 +18,7 @@ connection.connect(function (err) {
 
 
 function runSearch() {
-    inquirer.prompt({
+    inquirer.prompt([{
         name: "action",
         type: "list",
         message: "What would you like to do?",
@@ -28,13 +28,12 @@ function runSearch() {
             "See anythign you like in our inventory?",
             "Become one of our Suppliers. Join our Team!",
         ]
-    }).then(function (answer) {
+    }]).then(function (answer) {
         switch (answer.action) {
             case "View all inventory":
                 displayAll();
                 break;
             case "See anythign you like in our inventory?":
-                console.log("Buy item!")
                 buyItem();
                 break;
             case "Become one of our Suppliers. Join our Team!":
@@ -53,11 +52,14 @@ function displayAll() {
     var query = "SELECT * FROM products";
     connection.query(query, function (err, res) {
         for (var i = 0; i < res.length; i++) {
-            console.log(res[i].id + "   |    "
+            console.log(res[i].id + " |  "
                 + res[i].product_name + "   |    "
                 + res[i].department_name + "     |     "
                 + res[i].product_description + "     |     "
                 + res[i].price);
+            console.log("===========================" +
+                "===========================" +
+                "===========================");
         }
         runSearch();
     });
@@ -66,35 +68,34 @@ function displayAll() {
 
 //Buying item
 function buyItem() {
-    inquirer.prompt({
+    inquirer.prompt([{
         name: "item",
         type: "input",
         message: "Please enter the ID# of the item you are interested in: ",
         // message: "-----------------------------",
-    }).then(function (answer) {
+    }]).then(function (answer) {
         let id = answer.item;
         connection.query("SELECT * FROM products WHERE ?", { id: answer.item }, function (err, res) {
-            console.log("------------------------")
+            console.log("===========================" + "===========================");
             console.log("ID# chosen: " + answer.item);
+            console.log("===========================" + "===========================");
             console.log("Item of Interest: " + res[0].product_name);
-            console.log("------------------------")
+            console.log("===========================" + "===========================");
             console.log("Item Description: " + res[0].product_description);
-            console.log("------------------------")
             console.log("Price : $" + res[0].price);
-            console.log("------------------------");
-            inquirer.prompt({
+            console.log("===========================" + "===========================");
+            inquirer.prompt([{
                 name: "decision",
                 type: "confirm",
                 message: "Would you like to purchase this item?",
-            }).then(function (answer) {
-                let respuesta = answer.decision;
-                console.log(respuesta);
-                if (respuesta == true) {
-                    console.log("You bought it!");
-                    console.log("Run a quick check if there's enough inventory ");
+            }]).then(function (answer) {
+                if (answer.decision) {
                     checkInventory(id);
                 }
-                buyItem();
+                else {
+
+                    runSearch();
+                }
             });
         });
     });
@@ -102,57 +103,69 @@ function buyItem() {
 
 function checkInventory(id) {
     let itemId = id;
-    console.log("We are inside check inventroy " + id);
-    inquirer.prompt({
-        name: "check",
-        type: "input",
-        message: "How many items would you like to buy?",
-    }).then(function (answer) {
-        let numOfItems = answer.check;
-        console.log(numOfItems);
-    });
-    connection.query("SELECT * FROM products WHERE ?", { id: itemId }, function (err, res) {
-        let numOfItemsQuery = res[0].stock_quantity;
-        console.log("Stock wantity is  : " + res[0].stock_quantity)
-        if (numOfItemsQuery >= 10) {
-            placeOrder();
-        }
-        else {
-            if (numOfItems > numOfItemsQuery) {
-                console.log("You can not place an order of that many items");
-                console.log("Please place an order of " + numOfItemsQuery + "items or less");
+    connection.query("SELECT  * FROM products WHERE ?", { id: itemId }, function (err, res) {
+        let inStock = res[0].stock_quantity;
+        inquirer.prompt([{
+            name: "check",
+            type: "input",
+            message: "How many items would you like to buy?",
+        }]).then(function (answer) {
+            let numOfItems = answer.check;
+            if (numOfItems < inStock) {
+                console.log("Your Total is = $" + res[0].price * numOfItems);
+                placeOrder();
             }
-        };
+            else {
+                console.log("Out of stock, please place a smaller order")
+            }
+        });
     });
 };
 
+
 function placeOrder() {
-    console.log("We are inside placeOrder");
-    inquirer.prompt(
+    inquirer.prompt([
         {
+            type: "input",
             name: "name",
             message: "Please enter a Name ",
         },
         {
+            type: "input",
             name: "address",
             message: "Please enter street address",
         },
         {
+            type: "input",
             name: "city",
             message: "Please enter city",
         },
         {
+            type: "input",
             name: "zipcode",
             message: "Please enter zipcode",
         },
 
-    ).then(function (answer) {
+    ]).then(function (answer) {
         console.log("PLease confirm name and address:");
-        let userInfo = (answer.name, answer.address, answer.city, answer.zipcode);
-        console.log(userInfo);
-        // console.log(answer.address);
-        // console.log(answer.city);
-        // console.log(answer.zipcode);
+        console.log(answer.name, '\n' +
+            answer.address, '\n' +
+            answer.city, '\n' +
+            answer.zipcode);
+        inquirer.prompt([
+            {
+                type: "confirm",
+                message: "Is this your correct address?",
+                name: "confirm",
+                default: true
+            },
+        ]).then(function (confirmAddress) {
+            if (confirmAddress.confirm) {
+                console.log("Thank you for your purchase!");
+                console.log("You will recieve an email shortly");
+                runSearch();
+            }
+        })
     });
 
 };
