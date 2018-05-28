@@ -113,7 +113,9 @@ function checkInventory(id) {
                 });
             }
             else {
-                console.log("Out of stock, please place a smaller order")
+                console.log("Out of stock, please place a smaller order");
+                checkInventory();
+
             }
         });
     });
