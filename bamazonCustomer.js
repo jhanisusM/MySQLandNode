@@ -99,6 +99,7 @@ function checkInventory(id) {
     let itemId = id;
     connection.query("SELECT  * FROM products WHERE ?", { id: itemId }, function (err, res) {
         let inStock = res[0].stock_quantity;
+        let priceOfItme =  res[0].price
         inquirer.prompt([{
             name: "check",
             type: "input",
@@ -107,14 +108,14 @@ function checkInventory(id) {
             let numOfItems = answer.check;
             if (numOfItems < inStock) {
                 let updatedInventory = inStock - numOfItems;
-                console.log("Your Total is = $" + inStock * numOfItems);
-                placeOrder().then (function(){
+                console.log("Your Total is = $" + priceOfItme * numOfItems);
+                placeOrder().then(function(){
                     updateProduct(itemId, updatedInventory);
                 });
             }
             else {
                 console.log("Out of stock, please place a smaller order");
-                checkInventory();
+                runSearch();
 
             }
         });
@@ -162,6 +163,9 @@ function placeOrder() {
                 console.log("Thank you for your purchase!");
                 console.log("You will recieve an email shortly");
                 runSearch();
+            }
+            else {
+                placeOrder();
             }
         })
     });
