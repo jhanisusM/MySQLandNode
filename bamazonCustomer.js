@@ -1,7 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
-
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -10,12 +9,10 @@ var connection = mysql.createConnection({
     database: "bamazonDB"
 });
 
-
 connection.connect(function (err) {
     if (err) throw err;
     runSearch();
 });
-
 
 function runSearch() {
     inquirer.prompt([{
@@ -45,8 +42,6 @@ function runSearch() {
     });
 };
 
-
-
 // Function DIsplays all inventory
 function displayAll() {
     var query = "SELECT * FROM products";
@@ -65,14 +60,12 @@ function displayAll() {
     });
 };
 
-
 //Buying item
 function buyItem() {
     inquirer.prompt([{
         name: "item",
         type: "input",
         message: "Please enter the ID# of the item you are interested in: ",
-        // message: "-----------------------------",
     }]).then(function (answer) {
         let id = answer.item;
         connection.query("SELECT * FROM products WHERE ?", { id: answer.item }, function (err, res) {
@@ -101,6 +94,7 @@ function buyItem() {
     });
 };
 
+//Function checks inventory
 function checkInventory(id) {
     let itemId = id;
     connection.query("SELECT  * FROM products WHERE ?", { id: itemId }, function (err, res) {
@@ -112,8 +106,11 @@ function checkInventory(id) {
         }]).then(function (answer) {
             let numOfItems = answer.check;
             if (numOfItems < inStock) {
-                console.log("Your Total is = $" + res[0].price * numOfItems);
-                placeOrder();
+                let updatedInventory = inStock - numOfItems;
+                console.log("Your Total is = $" + inStock * numOfItems);
+                placeOrder().then (function(){
+                    updateProduct(itemId, updatedInventory);
+                });
             }
             else {
                 console.log("Out of stock, please place a smaller order")
@@ -145,7 +142,6 @@ function placeOrder() {
             name: "zipcode",
             message: "Please enter zipcode",
         },
-
     ]).then(function (answer) {
         console.log("PLease confirm name and address:");
         console.log(answer.name, '\n' +
@@ -169,3 +165,21 @@ function placeOrder() {
     });
 
 };
+
+function updateProduct(itemId, updatedInventory) {
+    connection.query("UPDATE products SET ? WHERE ?",
+        [
+            {
+                stock_quantity: updatedInventory
+            },
+            {
+                id: itemId
+            },
+        ],
+        function (err, res) {
+            runSearch();
+        }
+    );
+};
+
+
