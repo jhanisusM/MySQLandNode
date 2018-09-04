@@ -1,6 +1,6 @@
 # MySQLandNode
 
-<img src="https://lh6.googleusercontent.com/XKMkTMxRiNhtBCVxWpyhQi7WMj7d6XW2g3s-_CKEFh1BiEcBntrUO9Fyede_p1c29MVRNJX3qt68I12hX3BD=w2940-h5226" />
+<img src="https://image.ibb.co/inx4sz/bamazonC.png" />
 
 Bamazon is an Amazon-like storefront with a MySQL data based linked to it. The app takes in orders from customers and deplete stock from the store's inventory.
 
